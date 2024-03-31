@@ -9,11 +9,11 @@ PATH_DOWNLOAD ="./download"
 def get_html(url):
     
     # Cargamos la url
-    driver = webdriver.Chrome() # A partir de Selenium  v4.6.0 no es necesario configurar el driver.exe, selenium maneja el navegador y controlador por si solo
+    driver = webdriver.Chrome() # A partir de Selenium  v4.6.0 no es necesario configurar el driver.exe, selenium maneja el navegador y controlador por sí solo
     driver.get(url)
     #time.sleep(3) #3 segundos de carga 
            
-    # Obtenemos la pagina    
+    # Obtenemos la página    
     html = BeautifulSoup(driver.page_source,'html.parser')
     driver.close()
     return html    
@@ -22,9 +22,9 @@ def get_images(category):
 
     images = []
 
-    # Obtenemos el html de la pagina principal de la categoria
+    # Obtenemos el html de la página principal de la categoría
     mainCategoryURL=f"https://www.xtrafondos.com/categorias/{category}/horizontal/"
-    print(f"Revisando en categoria: {category}...".upper())
+    print(f"Revisando en categoría: {category}...".upper())
     
     htmlPageMainCategory = get_html(mainCategoryURL)
     
@@ -32,7 +32,7 @@ def get_images(category):
     linksPagination = htmlPageMainCategory.find("div",{"class":"content-links-pagination"}).find_all('a') # enlaces de la paginacion
     paginationStart = int(linksPagination[0].text)
     paginationEnd = int(linksPagination[-1].text)
-    print(f"La categoria tiene {paginationEnd} paginas")
+    print(f"La categoría tiene {paginationEnd} páginas")
     # Recorremos la pagina desde el inicio hasta el final de la paginacion    
     for pagination in range(paginationStart,paginationEnd+1):
     
@@ -57,10 +57,15 @@ def get_images(category):
     
     return images
 
-def create_directory_download(category):
+def create_directory_root_download():
+    # Crea el directorio raiz de descarga si no existe
+    if not os.path.exists(f'{PATH_DOWNLOAD}'):
+        os.mkdir(f'{PATH_DOWNLOAD}')       
+    
+def create_category_download(category):
     pathCategoryDownload = os.path.join(PATH_DOWNLOAD,category)
     
-    # Creamos el directorio de descarga si no existe
+    # Creamos el directorio de descarga de la categoria si no existe
     if not os.path.exists(f'{pathCategoryDownload}'):
         os.mkdir(f'{PATH_DOWNLOAD}/{category}')
     
@@ -69,8 +74,8 @@ def create_directory_download(category):
 def download_image(allLinksURL):
     
     for imageByCategory in allLinksURL:
-        # Creamos los directorios que guardaran las imagenes
-        pathDirectory = create_directory_download(imageByCategory['name_category'])
+        # Creamos los directorios que guardarán las imágenes
+        pathDirectory = create_category_download(imageByCategory['name_category'])
         print(f"Downloading in category: {imageByCategory['name_category']}...".upper())
         # Descargamos las imágenes
         for image in imageByCategory["images"]:
@@ -85,8 +90,7 @@ def download_image(allLinksURL):
                 pass #ignora el error y continua el bucle
 
 def init():
-    # Categorias de las imagenes
-    
+    # Categorías de las imágenes    
     categories = ["animales","anime-comics-caricaturas",
                   "arte-y-diseno","deportes","famosos-y-modelos",
                   "festividades","flores",
@@ -96,7 +100,7 @@ def init():
     allLinksURL = []
     for category in categories:
 
-        # Obtenemos los datos de las imagenes de cada categoria y almacenamos en un array
+        # Obtenemos los datos de las imágenes de cada categoria y almacenamos en un array
         linkImagesDownload = get_images(category)
         linksByCategory = {
             "name_category": category,
@@ -104,9 +108,10 @@ def init():
         }       
         allLinksURL.append(linksByCategory)
 
+    create_directory_root_download()
     download_image(allLinksURL)
   
-if __name__=='__main__':
+if __name__=='__main__':    
     start_time = time.perf_counter()
     init()
     end_time = time.perf_counter()
